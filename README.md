@@ -71,7 +71,7 @@ The application is developed using the following technologies:
 
 ### 2. Clone the repository:
 ```bash
- git clone https://github.com/yourusername/yourproject.git
+ git clone https://github.com/iokaf/CliniCorrect-Public
 ```
 ### 3. (Suggested) Create a virtual environment and activate it:
 
