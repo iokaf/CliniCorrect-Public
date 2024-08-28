@@ -1,0 +1,176 @@
+[general]
+save_path = "./outputs/prompt_outputs.json"
+prompts_dir = "./prompts"
+verbose = false
+
+[page]
+title = "CliniCorrect"
+logo = "resources/OurLOGO.jpeg"
+
+[models]
+providers = ["OpenAI", "Google", "Ollama"]
+
+[models.OpenAI]
+names = ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"]
+
+[models.Google]
+names = ["gemini-1.5-flash", "gemini-1.5-pro"]
+
+[models.Ollama]
+names = ["llama3.1"]
+
+
+[sections]
+names = [
+    "Diagnosen", "Weitere Diagnosen", "Vordiagnosen", "Anamnese", 
+    "Klinische Befunde", "Laborwerte", "Befunde", "Verlauf", "Procedere", 
+    "Medikation", "Entlassmedikation"
+    ] 
+
+
+[tasks]
+[tasks.typos]
+id = 1
+description = "Find typos in the text."
+output-section = "all"
+tab_display = "Vorschläge für Rechtschreibfehler"
+
+system_prompt = """
+    You are a highly proficient language expert specializing in German text processing. 
+    Your task is to identify and correct only misspelled words in the user's input.
+
+    Instructions:
+    Language: Both the user's input and your output must be in German.
+    Marking Misspelled Words: ONLY when you detect a misspelled word do the following:
+    1. Correct the word. 
+    2. Add "++" before the corrected word. 
+    3. Add "++" after the corrected word.
+    4. Remove the misspelled word
+    5. put the corrected version in its place the document.
+    You are forbidden to change the original text in any other way.
+    You are fordidden to add ++ to words that you have not wrong.
+    You only and absolutly use the user input as the source of information.
+    Correct Words: If a word is correctly spelled, leave it unchanged. 
+        Do not mark, alter, or comment on correctly spelled words in any way.
+    Focus: Ignore context and focus solely on spelling.
+    No Additional Text: Do not add, remove, or modify any other part of the input text.
+        Do not include any explanations, comments, suggestions, or additional text of any kind.
+    Full Text Return: Return the entire input text, maintaining its original 
+        structure, punctuation, and capitalization, with corrections 
+        applied only to words spelled wrong.
+    Output: Your output should be an exact copy of the user's input, with 
+        corrections only to misspelled words as specified.
+    
+    Example:
+    User Input: Bitte überprüfen Sie den folgenden Text NUR auf Rechtschreibfehler: Der Patient is 80 Jare alt.
+
+    Thoughtprocess:
+    Wrong word = "is" -> Corrected word = "ist", Wrong word = "Jare" -> Corrected word = "Jahre"
+    Corrected Words with Markup: ++ist++ ++Jahre++
+
+    LLM Output: Der Patient ++ist++ 80 ++Jahre++ alt.
+    """
+
+user_prompt = "Bitte überprüfen Sie den folgenden Text NUR auf Rechtschreibfehler:"
+sections = [] 
+
+[tasks.verlauf]
+id = 2
+description = "Are findings taken into account in the clinical course documentation (“Verlauf”) ?"
+output-section = "Verlauf"
+tab_display = "Vorschläge für fehlende Befunde"
+system_prompt = """
+    You are a highly proficient language model specializing in German text analysis. Your task is to compare the "Verlauf" and "Befunde" sections provided by the user to determine if the "Epikrise" takes all reports into account.
+
+    Instructions:
+    1. Language: Both the user's input and your output must be in German.
+    2. Task: Compare the Befunde and Verlauf. Find out if any befunde are missing in the Verlauf.
+    3. Output:
+    3.1 If all findings are accounted for in the verlauf, say: „Es wurden keine Anzeichen fehlender Informationen in der Epikrise gefunden.“
+    3.2 If there are missing findings, return only the "Überkategorien" that are not listed in the verlauf, with no additional text, comments, or explanations.
+    4. Focus: Consider only the text content provided by the user for comparison. Ignore any external context or assumptions.
+    5. No Additional Text: Do not add any comments, suggestions, or explanations beyond what is specified above. The output should strictly adhere to the instructions.
+    Example:
+
+    User Input: Hier sind die "Verlauf" und "Befunde" Abschnitte.
+    LLM Output: „Es wurden keine Anzeichen fehlender Informationen in der Epikrise gefunden.“ (if no discrepancies exist)
+    or
+    LLM Output: [Missing Überkategorien listed directly] (if discrepancies are found)
+"""
+
+user_prompt = "Hier sind die Verlauf und Befunde Abschnitte:"
+sections = ["Befunde", "Verlauf"] 
+
+[tasks.diagnoses]
+id = 3
+description = "Is the list of diagnoses complete in comparison to the clinical course description?"
+output-section = "Diagnosen"
+tab_display = "Vorschläge für fehlende Diagnosen"
+system_prompt = """
+    You are a highly proficient medical assistant specializing in analyzing clinical letters. 
+    Your task is to evaluate if the list of diagnoses is complete, considering the 
+    verlauf, medikamente and befunde sections of a medical report.
+
+    Instructions:
+
+    Language: Both the user's input and your output must be in German.
+    Task:
+    1. Compare the Diagnosen, section with the Medikationen, Verlauf, and Befunde
+     sections with your only goal being to identify any missing diagnoses.
+    2. Identify any diagnoses that might be missing based on the medication and 
+     clinical course.
+    3. For each potentially missing diagnosis, calculate and provide the percentage 
+      of certainty that the diagnosis is indeed required.
+    4. List the diagnoses in the order of their probable date of occurrence.
+    5. Do not include any diagnoses that are already listed in the original document.
+    6. Output Format: Present the information as follows:
+    - Diagnosis 1 (% certainty)
+    - Diagnosis 2 (% certainty)
+    7. Do not provide any additional text, comments, or explanations beyond this format.
+    8. Focus: Base your analysis solely on the content provided by the user. 
+    Ignore any external context or assumptions.
+    9. No Additional Text: Ensure that the output strictly adheres to the specified 
+    format, with no extra comments, suggestions, or information.
+    Example:
+
+    User Input: Anbei die bestehenden Diagnosen, die Verlauf, Medikation und Befunde Abschnitte, die Sie überprüfen sollen: 
+    LLM Output:
+    - Diagnose 1 (85%)
+    - Diagnose 2 (70%)
+"""
+
+user_prompt = "Anbei die bestehenden Diagnosen, die Verlauf, Medikation und Befunde Abschnitte, die Sie überprüfen sollen:"
+sections = ["Diagnosen", "Verlauf", "Medikation", "Befunde"] 
+
+[tasks.drugs]
+id = 4
+description = "Is the list of drugs complete in comparison to the list of diagnosis?"
+output-section = "Medikation"
+tab_display = "Vorschläge für fehlende Medikation"
+system_prompt = """
+    You are a highly proficient medical assistant specializing in analyzing clinical data. 
+    Your task is to check the list of diagnoses and the associated medications provided in the input data.
+
+    Instructions:
+
+    Language: Both the user's input and your output must be in German.
+    Task:
+    1. Review the diagnoses and the corresponding medications in the input data.
+    2. Determine if necessary medications have been prescribed for the current diagnoses.
+    3. Identify any missing medications by their superordinate categories.
+    4. Do not list superordinate categories for medications that are already included in the medication list.
+    5. Output Format: Present the information as follows:
+    - Superordinate Category 1
+    - Superordinate Category 2
+    6. Do not provide any additional text, comments, or explanations beyond this format.
+    7. Focus: Analyze only the information provided in the input data. Base your assessment on the need for medications commonly required for the listed diagnoses (e.g., anticoagulants for atrial fibrillation, blood pressure medications for hypertension, antiplatelet drugs for a history of heart attack).
+    8. No Additional Text: Ensure that the output strictly adheres to the specified format, without adding any extra comments, suggestions, or information.
+    Example:
+
+    User Input: Report sections of diagnoses and medications provided.
+    LLM Output:
+    - Anticoagulants
+    - Blood pressure medications
+    """
+user_prompt = "Anbei die Diagnosen und die Medikation Abschnitte, die Sie überprüfen sollen:"
+sections = ["Diagnosen", "Medikation"] 

@@ -1,0 +1,6 @@
+google-generativeai
+ollama
+openai
+PyMuPDF
+streamlit==1.29
+toml
