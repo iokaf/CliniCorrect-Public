@@ -66,8 +66,9 @@ The application is developed using the following technologies:
 
 [Download Ollama](https://ollama.com/) 
 
-[Install llama3.1](https://ollama.com/llama3.1/)
+[Install llama3.1](https://ollama.com/library/llama3.1)
 
+Please, keep in mind that using Ollama localy without a graphics card can be slow.
 
 ### 2. Clone the repository:
 ```bash

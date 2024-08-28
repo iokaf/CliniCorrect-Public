@@ -27,6 +27,7 @@ st.set_page_config(
     layout="wide"
     )
 
+
 ################################################################################
 # Document Selector 
 ################################################################################
@@ -84,7 +85,10 @@ with st.sidebar:
 
     for task in all_tasks:
         required_sections = config["tasks"][task]["sections"]
-        if set(required_sections).issubset(set(selected_sections)):
+
+        diff = set(required_sections).difference(set(selected_sections))
+
+        if not diff:
             available_tasks.append(task)
 
 
@@ -95,6 +99,11 @@ with st.sidebar:
             key=f"task_{task}",
             disabled=task not in available_tasks
         )
+
+        if task not in available_tasks:
+            required_sections = config["tasks"][task]["sections"]
+            diff = set(required_sections).difference(set(selected_sections))
+            st.info(f'Diese Abschnitte fehlen: {" ,".join(diff)}', icon="ℹ️")
 
     st.session_state.selected_tasks = [
         task for task in all_tasks
