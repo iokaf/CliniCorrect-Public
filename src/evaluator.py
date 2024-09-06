@@ -12,6 +12,8 @@ import datetime
 import google
 import google.generativeai as genai
 
+import regex as re
+
 class Evaluator:
     """Class to combine text passage, prompt and model"""
 
@@ -81,7 +83,8 @@ class Evaluator:
                 messages=[
                     {"role": "system", "content": f"{system_prompt}"},
                     {"role": "user", "content": f"{user_prompt}: {passage}"}
-                ]
+                ],
+                temperature=0.0
                 )
         except openai.APIConnectionError:
             raise ValueError("OpenAI API key missing.")    
@@ -96,9 +99,13 @@ class Evaluator:
                 {"role": "user", "parts": [system_prompt]},
             ]
 
-            chat = self.client.start_chat(history=history)
+            chat = self.client.start_chat(
+                history=history,
+                )
 
-            response = chat.send_message(f"{user_prompt}: {passage}", stream=False)
+            response = chat.send_message(
+                f"{user_prompt}: {passage}", 
+                stream=False)
             response = response.candidates
             
             if len(response) == 0:
@@ -171,6 +178,34 @@ class Evaluator:
                 passage=sec_content
             )
 
+            # Identify all occasions of "{*:*}" in the response
+            typos = re.findall(r"\{.*?:.*?\}", resp)
+
+            all_typos = {}
+            for typo in typos:
+                typo = typo[1:-1]
+                split = typo.split(":")
+
+                if len(split) != 2:
+                    continue
+
+                mistake, correction = split
+
+                mistake = mistake.strip()
+                correction = correction.strip()
+
+                # Only keep mistakes that are present in the original text
+                if not mistake in sec_content:
+                    continue
+                # Only keep mistakes that are not the same as the correction
+                if mistake == correction:
+                    continue
+
+                all_typos[mistake] = correction
+            
+            resp = "* ".join([f"{k}->{v} \n" for k, v in all_typos.items()])
+            if resp:
+                resp = "* " + resp
             typos_output[sec_name] = resp
 
         return typos_output

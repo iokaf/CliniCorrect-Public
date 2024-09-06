@@ -42,6 +42,16 @@ The application is developed using the following technologies:
 - Google Cloud API
 - Ollama API
 
+### Obtaining API keys
+To use the models from OpenAI and Google, the user needs to obtain an API key from the respective providers.
+Please mind all costs, limitations and terms of the respectigve model providers.
+
+- [OpenAI API](https://openai.com/index/openai-api/): Please note that using OpenAI API requires a
+paid subscription. You can sign-up and follow instructions on the webpage to obtain the API key.
+- [Google Gemini](https://ai.google.dev/gemini-api/docs/api-key): Google Gemini provides both a limited free API and a paid API key. Both can be used CliniCorrect. Please mind potential limitation on model and API use limits applied by the provider.
+- Ollama: Ollama runs offline and locally, thus no API key is required.
+
+
 ## Disclaimers
 - The project is still in development and is not yet ready for production.
 - The project is not a substitute for a medical professional.
@@ -125,7 +135,8 @@ All of the text fields are also modifiable by the user, allowing in-place correc
 ### Output:
 
 The output of the selected model is displayed on the right side of the page.
-Spelling errors are evaluated for each selected section and are presented in red letters.
+For each miss-spelled word, the model provides a suggestion for the correct spelling.
+
 
 ![Output](resources/usage-examples/spelling-output.png)
 

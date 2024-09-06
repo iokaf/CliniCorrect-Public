@@ -139,28 +139,15 @@ evaluator = Evaluator(
 
 disp_cols = st.columns(2)
 
+disp_cols[1].markdown("# CliniCorrect Ausgabe")
+
 ####################################
 # Input Text Areas
 ####################################
 disp_cols[0].markdown("# Originaltexte")
-for section in section_names:
-    if st.session_state.get(f"include_{section}"):
-        disp_cols[0].markdown(f"### {section}")
-
-        disp_cols[0].text_area(
-            label=f"{section}", 
-            key=f"{section}_text",
-            height=300,
-            label_visibility="hidden"
-        )
 
 
-####################################
-# CliniCorrect Output
-####################################
-disp_cols[1].markdown("# CliniCorrect Ausgabe")
-
-if disp_cols[1].button("CliniCorrect me!"):
+def clinicorrect_me():
     selected_tasks = st.session_state.get("selected_tasks")
     selected_sections = [
         name for name in section_names 
@@ -169,56 +156,76 @@ if disp_cols[1].button("CliniCorrect me!"):
 
     for task in selected_tasks:
         task_display_name = config["tasks"][task]["tab_display"]
-        disp_cols[1].markdown(f"## {task_display_name}")
-
-        if task == "typos":
-            
-            user_prompt = config["tasks"][task]["user_prompt"]
-
-            case_data = {
-                section: st.session_state.get(f"{section}_text")
-                for section in selected_sections
-            }
-             
-            output = evaluator.evaluate_task(
-                task=task,
-                document_json=case_data,
-                case_name="case_name",
-                output_section="output_section"
-                )
-            
-            sections_response = output.get("response", dict())
-            
-            for sect_name, sect_resp in sections_response.items():
-                disp_cols[1].markdown(f"## {sect_name}")
-                response = sect_resp
-                response = response.replace(user_prompt, "")
+        with disp_cols[1].expander(f"## {task_display_name}"):
+            if task == "typos":
                 
-                matches = re.finditer(pattern, response)
-                response = re.sub(pattern, lambda x: color_text(x.group(1)), response)
-                disp_cols[1].markdown(response, unsafe_allow_html=True)
+                user_prompt = config["tasks"][task]["user_prompt"]
+
+                case_data = {
+                    section: st.session_state.get(f"{section}_text")
+                    for section in selected_sections
+                }
+                
+                output = evaluator.evaluate_task(
+                    task=task,
+                    document_json=case_data,
+                    case_name="case_name",
+                    output_section="output_section"
+                    )
+                
+                sections_response = output.get("response", dict())
+                
+                for sect_name, sect_resp in sections_response.items():
+                    if sect_resp:
+                        st.markdown(f"## {sect_name}")
+                        response = sect_resp
+                        response = response.replace(user_prompt, "")
+                        
+                        matches = re.finditer(pattern, response)
+                        response = re.sub(pattern, lambda x: color_text(x.group(1)), response)
+                        st.markdown(response, unsafe_allow_html=True)
+                    
+
+            else:
+                user_prompt = config["tasks"][task]["user_prompt"]
+                output_section = config["tasks"][task]["output-section"]
+
+                case_data = {
+                    section: st.session_state.get(f"{section}_text")
+                    for section in selected_sections
+                }
+
+                
+                output = evaluator.evaluate_task(
+                    task=task,
+                    document_json=case_data,
+                    case_name="case_name",
+                    output_section=output_section
+                    )
+
+                sections_response = output.get("response", dict())
+                reply = sections_response.get(output_section, dict())
+                st.write(reply)
+            
                 
 
-        else:
-            user_prompt = config["tasks"][task]["user_prompt"]
-            output_section = config["tasks"][task]["output-section"]
+with disp_cols[0].form(key="input_form"):
+    if st.form_submit_button("CliniCorrect me!"):
+        clinicorrect_me()
 
-            case_data = {
-                section: st.session_state.get(f"{section}_text")
-                for section in selected_sections
-            }
+    for section in section_names:
+        if st.session_state.get(f"include_{section}"):
+            st.markdown(f"### {section}")
 
-            
-            output = evaluator.evaluate_task(
-                task=task,
-                document_json=case_data,
-                case_name="case_name",
-                output_section=output_section
-                )
+            st.text_area(
+                label=f"{section}", 
+                key=f"{section}_text",
+                height=300,
+                label_visibility="hidden"
+            )
+    ####################################
+    # CliniCorrect Output
+    ####################################
 
-            sections_response = output.get("response", dict())
-            reply = sections_response.get(output_section, dict())
-            disp_cols[1].write(reply)
-        
-            
+    
 
