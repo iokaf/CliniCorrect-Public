@@ -34,7 +34,10 @@ st.set_page_config(
 
 # Add a page where the user can upload a PDF file
 st.markdown("# CliniCorrect")
-data_file = st.file_uploader("Bitte wählen Sie einen Entlassungsbrief", type=["pdf"])
+data_file = st.file_uploader(
+    "Bitte wählen Sie einen Entlassungsbrief", 
+    type=["pdf"],
+    )
 
 if not data_file:
     # Clear the session state

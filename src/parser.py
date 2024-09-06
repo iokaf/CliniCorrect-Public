@@ -48,26 +48,29 @@ headers = ['Diagnosen',
             'Medikation',
             'Entlassmedikation']
 
-position_of_headers = {
-    'Diagnosen': 0,
-    'Weitere Diagnosen': 0,
-    'Vordiagnosen': 0,
-    'Anamnese': 0,
-    'Klinische Befunde': 0,
-    'Laborwerte': 0,
-    'Befunde': 0,
-    'Weitere Befunde': 0,
-    'Verlauf': 0,
-    'Procedere': 0,
-    'Medikation': 0,
-    'Entlassmedikation': 0
-}
+
 
 double_headers_first = ['Weitere', 'Klinische']
 double_headers_second = ['Diagnosen', 'Befunde']
    
 
 def extract_sections(text_blocks):
+
+    position_of_headers = {
+        'Diagnosen': 0,
+        'Weitere Diagnosen': 0,
+        'Vordiagnosen': 0,
+        'Anamnese': 0,
+        'Klinische Befunde': 0,
+        'Laborwerte': 0,
+        'Befunde': 0,
+        'Weitere Befunde': 0,
+        'Verlauf': 0,
+        'Procedere': 0,
+        'Medikation': 0,
+        'Entlassmedikation': 0
+    }
+
     sections = {header: '' for header in headers}
     
     current_header = None
@@ -93,10 +96,13 @@ def extract_sections(text_blocks):
                     second_word = text_blocks[counter + 1]['word']
                 except IndexError:
                     second_word = "random_word"
+
                 if second_word in double_headers_second:
                     current_header = f"{word} {second_word}"
                     position_of_headers[current_header] = counter
                     ignore_next = True
+
+
             elif word in headers:
                 if ignore_next:
                     ignore_next = False
